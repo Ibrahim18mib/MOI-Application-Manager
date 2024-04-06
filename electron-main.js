@@ -1,9 +1,11 @@
-const { app, BrowserWindow } = require('electron/main')
-const path = require('node:path')
-const isDev = process.argv.includes("--dev")
+const { app, BrowserWindow, ipcMain } = require('electron/main');
+const path = require('node:path');
+const isDev = process.argv.includes("--dev");
+
+let mainWindow;
 
 function createWindow() {
-  const win = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
     webPreferences: {
@@ -11,13 +13,11 @@ function createWindow() {
     },
   });
   
-  
-  if(isDev){
-    win.loadURL("http://localhost:4200")
-    win.webContents.openDevTools()
-  }
-  else{
-    win.loadFile(path.join(__dirname, "/dist/moi-application-manager/browser/index.html"));
+  if (isDev) {
+    mainWindow.loadURL("http://localhost:4200");
+    mainWindow.webContents.openDevTools();
+  } else {
+    mainWindow.loadFile(path.join(__dirname, "/dist/moi-application-manager/browser/index.html"));
   }
 }
 
@@ -35,4 +35,21 @@ app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
     app.quit();
   }
+});
+
+// IPCMain handlers
+ipcMain.handle("minimize-window", () => {
+  mainWindow.minimize();
+});
+
+ipcMain.handle("maximize-window", () => {
+  if (mainWindow.isMaximized()) {
+    mainWindow.restore();
+  } else {
+    mainWindow.maximize();
+  }
+});
+
+ipcMain.handle("close-window", () => {
+  mainWindow.close();
 });
